@@ -25,6 +25,8 @@ model Asset {
   type            String
   amountInvested  Float
   startDate       DateTime?
+  maturityDate    DateTime?   // ← new
+  interestRate    Float?      // ← new
   notes           String?
   documentUrl     String?
   customFields    Json?    @default("{}")

@@ -6,8 +6,12 @@ const COMMON_TYPES = ['FD', 'Insurance', 'Real Estate', 'Stocks', 'Mutual Fund',
 export default function AssetModal({ asset, onClose, onSaved }) {
   const isEdit = !!asset
   const [form, setForm] = useState({
-    name: '', type: '', amountInvested: '', startDate: '', notes: '', documentUrl: '', customFields: '{}'
+    name: '', type: '', amountInvested: '', startDate: '',
+    maturityDate: '', interestRate: '',
+    notes: '', documentUrl: '', customFields: '{}'
   })
+  const [hasMaturity, setHasMaturity] = useState(false)
+  const [hasRate, setHasRate] = useState(false)
   const [customFieldsError, setCustomFieldsError] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -19,10 +23,14 @@ export default function AssetModal({ asset, onClose, onSaved }) {
         type: asset.type || '',
         amountInvested: asset.amountInvested ?? '',
         startDate: asset.startDate ? asset.startDate.slice(0, 10) : '',
+        maturityDate: asset.maturityDate ? asset.maturityDate.slice(0, 10) : '',
+        interestRate: asset.interestRate ?? '',
         notes: asset.notes || '',
         documentUrl: asset.documentUrl || '',
         customFields: JSON.stringify(asset.customFields || {}, null, 2),
       })
+      setHasMaturity(!!asset.maturityDate)
+      setHasRate(asset.interestRate != null)
     }
   }, [asset])
 
@@ -41,7 +49,13 @@ export default function AssetModal({ asset, onClose, onSaved }) {
     setCustomFieldsError('')
     setLoading(true)
     try {
-      const payload = { ...form, amountInvested: parseFloat(form.amountInvested), customFields: parsedCF }
+      const payload = {
+        ...form,
+        amountInvested: parseFloat(form.amountInvested),
+        maturityDate: hasMaturity && form.maturityDate ? form.maturityDate : null,
+        interestRate: hasRate && form.interestRate !== '' ? parseFloat(form.interestRate) : null,
+        customFields: parsedCF,
+      }
       if (isEdit) {
         await api.put(`/assets/${asset.id}`, payload)
       } else {
@@ -56,33 +70,43 @@ export default function AssetModal({ asset, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
-        className="bg-vault-surface border border-vault-border rounded-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto fade-in"
+        className="bg-vault-surface border border-vault-border w-full sm:max-w-lg sm:mx-4 sm:rounded-xl rounded-t-2xl max-h-[92vh] overflow-y-auto fade-in"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-vault-border">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-vault-border sticky top-0 bg-vault-surface z-10">
           <h2 className="text-vault-text font-semibold">{isEdit ? 'Edit Asset' : 'Add Asset'}</h2>
-          <button onClick={onClose} className="text-vault-subtle hover:text-vault-text transition-colors">
+          <button onClick={onClose} className="text-vault-subtle hover:text-vault-text transition-colors p-1">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {error && <p className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg">{error}</p>}
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
+          {error && (
+            <p className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg">{error}</p>
+          )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">Asset Name *</label>
-              <input
-                required value={form.name} onChange={e => set('name', e.target.value)}
-                placeholder="e.g. SBI Fixed Deposit"
-                className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
-              />
-            </div>
+          {/* Name */}
+          <div>
+            <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
+              Asset Name *
+            </label>
+            <input
+              required value={form.name} onChange={e => set('name', e.target.value)}
+              placeholder="e.g. SBI Fixed Deposit"
+              className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
+            />
+          </div>
 
+          {/* Type + Amount — 2 col on sm+, stacked on mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">Type *</label>
               <input
@@ -94,16 +118,19 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 {COMMON_TYPES.map(t => <option key={t} value={t} />)}
               </datalist>
             </div>
-
             <div>
-              <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">Amount Invested (₹) *</label>
+              <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">Amount (₹) *</label>
               <input
-                required type="number" min="0" step="any" value={form.amountInvested} onChange={e => set('amountInvested', e.target.value)}
+                required type="number" min="0" step="any"
+                value={form.amountInvested} onChange={e => set('amountInvested', e.target.value)}
                 placeholder="100000"
                 className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
               />
             </div>
+          </div>
 
+          {/* Start Date + Doc URL */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">Start Date</label>
               <input
@@ -111,7 +138,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
               />
             </div>
-
             <div>
               <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">Document URL</label>
               <input
@@ -122,6 +148,48 @@ export default function AssetModal({ asset, onClose, onSaved }) {
             </div>
           </div>
 
+          {/* Maturity date — checkbox gated */}
+          <div className="bg-vault-muted/40 border border-vault-border rounded-lg p-3.5 space-y-3">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox" checked={hasMaturity}
+                onChange={e => { setHasMaturity(e.target.checked); if (!e.target.checked) set('maturityDate', '') }}
+                className="w-4 h-4 rounded border-vault-border bg-vault-muted accent-vault-accent cursor-pointer"
+              />
+              <span className="text-sm text-vault-text font-medium">Has Maturity Date</span>
+            </label>
+            {hasMaturity && (
+              <input
+                type="date" value={form.maturityDate} onChange={e => set('maturityDate', e.target.value)}
+                className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
+              />
+            )}
+          </div>
+
+          {/* Interest rate — checkbox gated */}
+          <div className="bg-vault-muted/40 border border-vault-border rounded-lg p-3.5 space-y-3">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox" checked={hasRate}
+                onChange={e => { setHasRate(e.target.checked); if (!e.target.checked) set('interestRate', '') }}
+                className="w-4 h-4 rounded border-vault-border bg-vault-muted accent-vault-accent cursor-pointer"
+              />
+              <span className="text-sm text-vault-text font-medium">Has Interest Rate</span>
+            </label>
+            {hasRate && (
+              <div className="relative">
+                <input
+                  type="number" min="0" max="100" step="0.01"
+                  value={form.interestRate} onChange={e => set('interestRate', e.target.value)}
+                  placeholder="7.50"
+                  className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 pr-10 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-vault-subtle font-medium">%</span>
+              </div>
+            )}
+          </div>
+
+          {/* Notes */}
           <div>
             <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">Notes</label>
             <textarea
@@ -131,19 +199,23 @@ export default function AssetModal({ asset, onClose, onSaved }) {
             />
           </div>
 
+          {/* Custom Fields */}
           <div>
             <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
               Custom Fields <span className="normal-case">(JSON)</span>
             </label>
             <textarea
-              rows={4} value={form.customFields} onChange={e => set('customFields', e.target.value)}
-              placeholder={'{\n  "maturityDate": "2026-01-01",\n  "interestRate": "7.5%"\n}'}
-              className={`w-full bg-vault-muted border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle font-mono focus:border-vault-accent/60 transition-colors resize-none ${customFieldsError ? 'border-red-400/60' : 'border-vault-border'}`}
+              rows={3} value={form.customFields} onChange={e => set('customFields', e.target.value)}
+              placeholder={'{\n  "nominee": "Priya Sharma"\n}'}
+              className={`w-full bg-vault-muted border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle font-mono focus:border-vault-accent/60 transition-colors resize-none ${
+                customFieldsError ? 'border-red-400/60' : 'border-vault-border'
+              }`}
             />
             {customFieldsError && <p className="text-red-400 text-xs mt-1">{customFieldsError}</p>}
           </div>
 
-          <div className="flex gap-3 pt-1">
+          {/* Actions */}
+          <div className="flex gap-3 pt-1 pb-1">
             <button
               type="button" onClick={onClose}
               className="flex-1 px-4 py-2.5 rounded-lg border border-vault-border text-sm text-vault-subtle hover:text-vault-text hover:bg-vault-muted transition-all"

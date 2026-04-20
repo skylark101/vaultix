@@ -26,6 +26,8 @@ async function createAsset(userId, data) {
       type: data.type,
       amountInvested: parseFloat(data.amountInvested),
       startDate: data.startDate ? new Date(data.startDate) : null,
+      maturityDate: data.maturityDate ? new Date(data.maturityDate) : null,   
+      interestRate: data.interestRate != null ? parseFloat(data.interestRate) : null,
       notes: data.notes || null,
       documentUrl: data.documentUrl || null,
       customFields: data.customFields || {},
@@ -42,6 +44,8 @@ async function updateAsset(id, userId, data) {
       type: data.type,
       amountInvested: parseFloat(data.amountInvested),
       startDate: data.startDate ? new Date(data.startDate) : null,
+      maturityDate: data.maturityDate ? new Date(data.maturityDate) : null,   // ← new
+      interestRate: data.interestRate != null ? parseFloat(data.interestRate) : null,  // ← new
       notes: data.notes || null,
       documentUrl: data.documentUrl || null,
       customFields: data.customFields || {},
