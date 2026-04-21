@@ -2,9 +2,9 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const nav = [
-  { to: '/dashboard', label: 'Dashboard', icon: GridIcon },
-  { to: '/assets', label: 'Assets', icon: LayersIcon },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon },
+  { to: '/app/dashboard', label: 'Dashboard', icon: GridIcon },
+  { to: '/app/assets', label: 'Assets', icon: LayersIcon },
+  { to: '/app/settings', label: 'Settings', icon: SettingsIcon },
 ]
 
 function GridIcon() {
@@ -39,7 +39,7 @@ export default function Sidebar({ onClose }) {
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    navigate('/')
   }
 
   const handleNavClick = () => {
