@@ -83,6 +83,14 @@ export default function Login() {
                 className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
               />
             </div>
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-vault-subtle hover:text-vault-accent transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <button
               type="submit"
               disabled={loading}
