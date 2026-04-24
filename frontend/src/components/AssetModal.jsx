@@ -267,7 +267,7 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 parent + child it overflows the grid cell on narrow viewports.
           */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="min-w-0">
+            <div className="min-w-0 overflow-hidden">
               <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
                 Start Date
               </label>
@@ -275,10 +275,11 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => set("startDate", e.target.value)}
-                className="w-full min-w-0 bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
+                style={{ boxSizing: "border-box", maxWidth: "100%" }}
+                className="w-full min-w-0 appearance-none bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
               />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 overflow-hidden">
               <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
                 Document URL
               </label>
