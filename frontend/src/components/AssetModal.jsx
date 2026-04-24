@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import api from "../api/client";
-
 const COMMON_TYPES = [
   "FD",
   "Insurance",
@@ -14,7 +13,6 @@ const COMMON_TYPES = [
   "NPS",
   "Other",
 ];
-
 export default function AssetModal({ asset, onClose, onSaved }) {
   const isEdit = !!asset;
   const [form, setForm] = useState({
@@ -37,7 +35,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
   const [recurringAmount, setRecurringAmount] = useState("");
   const [recurringType, setRecurringType] = useState("monthly");
   const [recurringInterval, setRecurringInterval] = useState("");
-
   useEffect(() => {
     if (asset) {
       setForm({
@@ -59,9 +56,7 @@ export default function AssetModal({ asset, onClose, onSaved }) {
       setRecurringInterval(asset.recurringInterval ?? "");
     }
   }, [asset]);
-
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -105,7 +100,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
       setLoading(false);
     }
   };
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
@@ -139,14 +133,12 @@ export default function AssetModal({ asset, onClose, onSaved }) {
             </svg>
           </button>
         </div>
-
         <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
           {error && (
             <p className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg">
               {error}
             </p>
           )}
-
           {/* Name */}
           <div>
             <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
@@ -160,7 +152,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
             />
           </div>
-
           {/* Type + Amount — 2 col on sm+, stacked on mobile */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -209,7 +200,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 Recurring Investment
               </span>
             </label>
-
             {isRecurring && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -218,12 +208,10 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                     <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
                       Amount per cycle
                     </label>
-
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-vault-subtle text-sm">
                         ₹
                       </span>
-
                       <input
                         type="number"
                         min="0"
@@ -240,13 +228,11 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                       />
                     </div>
                   </div>
-
                   {/* Frequency */}
                   <div>
                     <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
                       Frequency
                     </label>
-
                     <select
                       value={recurringType}
                       onChange={(e) => setRecurringType(e.target.value)}
@@ -261,22 +247,27 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                     </select>
                   </div>
                 </div>
-
+                {/* FIX: was className="input" (bare class, no styles) — now matches rest of form */}
                 {recurringType === "custom" && (
                   <input
                     type="number"
-                    placeholder="Enter days"
+                    placeholder="Enter interval in days"
                     value={recurringInterval}
                     onChange={(e) => setRecurringInterval(e.target.value)}
-                    className="input"
+                    className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
                   />
                 )}
               </>
             )}
           </div>
-          {/* Start Date + Doc URL */}
+          {/* FIX: Start Date + Doc URL
+              - Added min-w-0 to both column divs so they never push past grid cell width
+              - Date input: added min-w-0 + w-full to enforce box-sizing; normalized px-3
+                The native date picker has a fixed intrinsic width; without min-w-0 on the
+                parent + child it overflows the grid cell on narrow viewports.
+          */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
                 Start Date
               </label>
@@ -284,10 +275,10 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => set("startDate", e.target.value)}
-                className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
+                className="w-full min-w-0 bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
                 Document URL
               </label>
@@ -300,7 +291,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               />
             </div>
           </div>
-
           {/* Maturity date — checkbox gated */}
           <div className="bg-vault-muted/40 border border-vault-border rounded-lg p-3.5 space-y-3">
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -326,7 +316,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               />
             )}
           </div>
-
           {/* Interest rate — checkbox gated */}
           <div className="bg-vault-muted/40 border border-vault-border rounded-lg p-3.5 space-y-3">
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -361,7 +350,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               </div>
             )}
           </div>
-
           {/* Notes */}
           <div>
             <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
@@ -375,7 +363,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors resize-none"
             />
           </div>
-
           {/* Custom Fields */}
           <div>
             <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
@@ -394,7 +381,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               <p className="text-red-400 text-xs mt-1">{customFieldsError}</p>
             )}
           </div>
-
           {/* Actions */}
           <div className="flex gap-3 pt-1 pb-1">
             <button
