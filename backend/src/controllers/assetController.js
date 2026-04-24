@@ -36,6 +36,15 @@ async function remove(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function getAssetHistory(req, res, next) {
+  try {
+    const data = await assetService.getAssetHistory(req.params.id, req.user.id)
+    res.json(data)
+  } catch (err) {
+    next(err)
+  }
+}
+
 async function dashboard(req, res, next) {
   try {
     const stats = await assetService.getDashboardStats(req.user.id);
@@ -50,4 +59,4 @@ async function types(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, get, create, update, remove, dashboard, types };
+module.exports = { list, get, create, update, remove, dashboard, types, getAssetHistory };

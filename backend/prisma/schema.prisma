@@ -35,7 +35,26 @@ model Asset {
   customFields    Json?    @default("{}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-
+  isRecurring       Boolean   @default(false)
+  recurringAmount   Float?
+  recurringType     String?   // daily | monthly | quarterly | semiannual | yearly | custom
+  recurringInterval Int?      // only for custom (in days)
+  histories AssetHistory[]
   @@index([userId])
   @@index([type])
+}
+
+model AssetHistory {
+  id        String   @id @default(cuid())
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  action    String
+  field     String?
+  oldValue  String?
+  newValue  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([assetId])
 }
