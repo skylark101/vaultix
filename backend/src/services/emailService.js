@@ -3,7 +3,7 @@ const { Resend } = require("resend");
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 function getResetEmailHtml({ resetUrl, expiryMinutes = 60 }) {
-    const logoUrl = `${process.env.APP_URL}/logo.png`;
+  const logoUrl = `${process.env.APP_URL}/logo.png`;
   return `
 <!DOCTYPE html>
 <html lang="en">
