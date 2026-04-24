@@ -276,7 +276,7 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 value={form.startDate}
                 onChange={(e) => set("startDate", e.target.value)}
                 style={{ boxSizing: "border-box", maxWidth: "100%" }}
-                className="min-w-0 w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
+                className="min-w-0 w-[80%] bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
               />
             </div>
             <div className="min-w-0 overflow-hidden">
