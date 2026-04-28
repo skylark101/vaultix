@@ -247,7 +247,6 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                     </select>
                   </div>
                 </div>
-                {/* FIX: was className="input" (bare class, no styles) — now matches rest of form */}
                 {recurringType === "custom" && (
                   <input
                     type="number"
@@ -260,11 +259,12 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               </>
             )}
           </div>
+
           {/* FIX: Start Date + Doc URL
-              - Added min-w-0 to both column divs so they never push past grid cell width
-              - Date input: added min-w-0 + w-full to enforce box-sizing; normalized px-3
-                The native date picker has a fixed intrinsic width; without min-w-0 on the
-                parent + child it overflows the grid cell on narrow viewports.
+              - Removed style prop (was causing conflicts)
+              - Removed w-[80%] — was a broken workaround, caused narrow input on mobile
+              - Added `block` display + `w-full min-w-0` on input to properly constrain
+                the native date picker inside the grid cell on iOS Safari
           */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="min-w-0 overflow-hidden">
@@ -275,8 +275,7 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => set("startDate", e.target.value)}
-                style={{ boxSizing: "border-box", maxWidth: "100%" }}
-                className="min-w-0 w-[80%] bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
+                className="block w-full min-w-0 bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
               />
             </div>
             <div className="min-w-0 overflow-hidden">
@@ -292,8 +291,11 @@ export default function AssetModal({ asset, onClose, onSaved }) {
               />
             </div>
           </div>
-          {/* Maturity date — checkbox gated */}
-          <div className="bg-vault-muted/40 border border-vault-border rounded-lg p-3.5 space-y-3">
+
+          {/* Maturity date — checkbox gated
+              FIX: Added min-w-0 to outer container to prevent grid blowout on iOS
+          */}
+          <div className="min-w-0 bg-vault-muted/40 border border-vault-border rounded-lg p-3.5 space-y-3">
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -313,7 +315,7 @@ export default function AssetModal({ asset, onClose, onSaved }) {
                 type="date"
                 value={form.maturityDate}
                 onChange={(e) => set("maturityDate", e.target.value)}
-                className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
+                className="block w-full min-w-0 bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors [color-scheme:dark]"
               />
             )}
           </div>
