@@ -6,6 +6,7 @@ function fmt(n) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n)
 }
 
+
 function StatCard({ label, value, sub }) {
   return (
     <div className="bg-vault-surface border border-vault-border rounded-xl p-4 sm:p-5">

@@ -8,48 +8,103 @@ function calculateTotal(asset) {
     return asset.amountInvested;
   }
 
-  const start = new Date(asset.startDate);
-  const now = new Date();
+  const start = toLocalDate(asset.startDate.toISOString());
+
+  const today = new Date();
+
+  const now = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
 
   if (start > now) return asset.amountInvested;
 
   const diffMs = now - start;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor(
+    diffMs / (1000 * 60 * 60 * 24)
+  );
 
   let cycles = 0;
 
   switch (asset.recurringType) {
     case "daily":
-      cycles = diffDays;
+      cycles = diffDays + 1;
       break;
-    case "monthly":
-      cycles =
+
+    case "monthly": {
+      let months =
         (now.getFullYear() - start.getFullYear()) * 12 +
         (now.getMonth() - start.getMonth());
+
+      if (now.getDate() < start.getDate()) {
+        months -= 1;
+      }
+
+      cycles = Math.max(0, months) + 1;
       break;
-    case "quarterly":
-      cycles = Math.floor(
-        ((now.getFullYear() - start.getFullYear()) * 12 +
-          (now.getMonth() - start.getMonth())) / 3
-      );
+    }
+
+    case "quarterly": {
+      let months =
+        (now.getFullYear() - start.getFullYear()) * 12 +
+        (now.getMonth() - start.getMonth());
+
+      if (now.getDate() < start.getDate()) {
+        months -= 1;
+      }
+
+      cycles =
+        Math.floor(Math.max(0, months) / 3) + 1;
+
       break;
-    case "semiannual":
-      cycles = Math.floor(
-        ((now.getFullYear() - start.getFullYear()) * 12 +
-          (now.getMonth() - start.getMonth())) / 6
-      );
+    }
+
+    case "semiannual": {
+      let months =
+        (now.getFullYear() - start.getFullYear()) * 12 +
+        (now.getMonth() - start.getMonth());
+
+      if (now.getDate() < start.getDate()) {
+        months -= 1;
+      }
+
+      cycles =
+        Math.floor(Math.max(0, months) / 6) + 1;
+
       break;
-    case "yearly":
-      cycles = now.getFullYear() - start.getFullYear();
+    }
+
+    case "yearly": {
+      let years =
+        now.getFullYear() - start.getFullYear();
+
+      if (
+        now.getMonth() < start.getMonth() ||
+        (now.getMonth() === start.getMonth() &&
+          now.getDate() < start.getDate())
+      ) {
+        years -= 1;
+      }
+
+      cycles = Math.max(0, years) + 1;
       break;
+    }
+
     case "custom":
       if (asset.recurringInterval) {
-        cycles = Math.floor(diffDays / asset.recurringInterval);
+        cycles =
+          Math.floor(
+            diffDays / asset.recurringInterval
+          ) + 1;
       }
       break;
   }
 
-  return asset.amountInvested + cycles * asset.recurringAmount;
+  return (
+    asset.amountInvested +
+    cycles * asset.recurringAmount
+  );
 }
 
 /* ───────────────── core ───────────────── */
@@ -228,18 +283,22 @@ async function getAssetHistory(id, userId) {
 }
 
 async function getDashboardStats(userId) {
-  const assets = await prisma.asset.findMany({ where: { userId } });
-
-  const total = assets.reduce((sum, a) => sum + calculateTotal(a), 0);
-
-  const recent = await prisma.asset.findMany({
+  const assets = await prisma.asset.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    take: 5,
   });
 
+  const total = assets.reduce(
+    (sum, a) => sum + calculateTotal(a),
+    0
+  );
+
+  const recent = assets.slice(0, 5);
+
   const byType = assets.reduce((acc, a) => {
-    acc[a.type] = (acc[a.type] || 0) + calculateTotal(a);
+    acc[a.type] =
+      (acc[a.type] || 0) + calculateTotal(a);
+
     return acc;
   }, {});
 
@@ -248,9 +307,19 @@ async function getDashboardStats(userId) {
     totalAssets: assets.length,
     recentAssets: recent,
     byType,
+    assets,
   };
 }
 
+
+function toLocalDate(dateString) {
+  const [year, month, day] = dateString
+    .split("T")[0]
+    .split("-")
+    .map(Number)
+
+  return new Date(year, month - 1, day)
+}
 async function getAssetTypes(userId) {
   const assets = await prisma.asset.findMany({
     where: { userId },
