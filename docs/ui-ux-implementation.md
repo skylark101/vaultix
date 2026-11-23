@@ -305,3 +305,22 @@ Dashboard answers: how much invested, allocation, investment age, and recorded i
 |-------|--------|
 | `npm run build` | ✅ Pass |
 | `npm run lint` | ✅ Pass |
+
+---
+
+## Assets page — layout & width
+
+### Changes (`frontend/src/pages/Assets.jsx`)
+
+1. **Content width** — Removed `max-w-6xl`; page uses full main column (`w-full min-w-0`).
+2. **Header** — Title + inline count on the left; **Add asset** on the right; slightly tighter vertical spacing.
+3. **Toolbar** — Search grows (`flex-1`); type filter fixed at `sm:w-44`; aligned heights with search input.
+4. **Desktop table** — `table-fixed` + `<colgroup>` (wider Name/Notes, compact Rate/Actions); removed horizontal scroll wrapper; `truncate` + `title` on name/notes; responsive cell padding (`px-3` / `xl:px-4`); dates use `text-xs` below `xl` to save width.
+5. **Mobile** — Unchanged card list (`lg:hidden`).
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | ✅ Pass |
+| `npm run lint` | ✅ Pass |

@@ -285,6 +285,19 @@ const TABLE_HEADERS = [
   { label: "Actions", align: "right" },
 ];
 
+/** Column widths for `table-fixed` — favors Name/Notes; keeps actions compact. */
+const TABLE_COL_CLASS = [
+  "w-[17%]", // Name
+  "w-[9%]", // Type
+  "w-[11%]", // Amount
+  "w-[5%]", // Rate
+  "w-[9%]", // Start
+  "w-[9%]", // Maturity
+  "w-[9%]", // Updated
+  "w-[22%]", // Notes
+  "w-[6.5rem]", // Actions
+];
+
 export default function Assets() {
   const [searchParams, setSearchParams] = useSearchParams();
   const openedFromUrl = useRef(false);
@@ -429,23 +442,31 @@ export default function Assets() {
   const listReady = !initialLoading;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 fade-in max-w-6xl">
+    <div className="p-4 sm:p-6 lg:p-8 fade-in w-full min-w-0">
       {banner && (
         <Alert variant={banner.variant} className="mb-4">
           <p className="flex-1">{banner.message}</p>
         </Alert>
       )}
 
-      <div className="flex items-center justify-between mb-5 sm:mb-6 gap-3">
-        <div>
+      <header className="flex items-center justify-between gap-3 mb-4 sm:mb-5">
+        <div className="min-w-0">
           <h1 className="text-lg sm:text-xl font-semibold text-vault-text">
             Assets
+            {listReady && (
+              <span className="text-vault-subtle font-normal text-base sm:text-lg">
+                {" "}
+                · {assets.length}
+                {isFiltered ? " shown" : ""}
+              </span>
+            )}
           </h1>
           <p className="text-vault-subtle text-sm mt-0.5">
             {listReady ? (
               <>
-                {assets.length} asset{assets.length !== 1 ? "s" : ""}
-                {isFiltered ? " matching filters" : ""}
+                {isFiltered
+                  ? "Matching your search and type filter"
+                  : "Your registered investments"}
                 {refreshing && (
                   <span className="text-vault-secondary ml-2">Updating…</span>
                 )}
@@ -457,7 +478,7 @@ export default function Assets() {
         </div>
         <Button
           size="md"
-          className="flex-shrink-0"
+          className="shrink-0"
           onClick={() => setModal("create")}
         >
           <svg
@@ -477,10 +498,10 @@ export default function Assets() {
           <span className="hidden sm:inline">Add asset</span>
           <span className="sm:hidden">Add</span>
         </Button>
-      </div>
+      </header>
 
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-5 sm:mb-6">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-stretch gap-2 sm:gap-3 mb-4 sm:mb-5">
+        <div className="relative flex-1 min-w-0">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 text-vault-subtle pointer-events-none"
             width="15"
@@ -500,18 +521,19 @@ export default function Assets() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by name…"
-            className="pl-9 bg-vault-surface"
+            className="pl-9 bg-vault-surface w-full"
             aria-label="Search assets by name"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             aria-label="Filter by asset type"
             className={cn(
-              "flex-1 sm:flex-none sm:min-w-[10rem] bg-vault-surface border border-vault-border rounded-lg",
-              "px-3 py-2.5 text-sm text-vault-text focus:border-vault-accent/60 transition-colors focus-ring"
+              "w-full sm:w-44 bg-vault-surface border border-vault-border rounded-lg",
+              "px-3 py-2.5 text-sm text-vault-text min-h-[42px]",
+              "focus:border-vault-accent/60 transition-colors focus-ring"
             )}
           >
             <option value="">All types</option>
@@ -559,95 +581,112 @@ export default function Assets() {
             ))}
           </div>
 
-          <Card className="hidden lg:block overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-vault-border bg-vault-inset/40">
-                    {TABLE_HEADERS.map(({ label, align }) => (
-                      <th
-                        key={label}
-                        scope="col"
-                        className={cn(
-                          "px-4 py-3 text-xs font-medium text-vault-subtle uppercase tracking-wider whitespace-nowrap",
-                          align === "right" ? "text-right" : "text-left"
-                        )}
-                      >
-                        {label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {assets.map((asset, rowIndex) => (
-                    <tr
-                      key={asset.id}
+          <Card className="hidden lg:block overflow-hidden min-w-0">
+            <table className="w-full min-w-0 table-fixed text-sm">
+              <colgroup>
+                {TABLE_COL_CLASS.map((className, i) => (
+                  <col key={TABLE_HEADERS[i].label} className={className} />
+                ))}
+              </colgroup>
+              <thead>
+                <tr className="border-b border-vault-border bg-vault-inset/40">
+                  {TABLE_HEADERS.map(({ label, align }) => (
+                    <th
+                      key={label}
+                      scope="col"
                       className={cn(
-                        "hover:bg-vault-muted/20 transition-colors",
-                        rowIndex > 0 && "border-t border-vault-border"
+                        "px-3 xl:px-4 py-3 text-xs font-medium text-vault-subtle uppercase tracking-wider",
+                        align === "right" ? "text-right" : "text-left",
+                        label !== "Name" &&
+                          label !== "Notes" &&
+                          label !== "Type" &&
+                          "whitespace-nowrap"
                       )}
                     >
-                      <td className="px-4 py-3 align-middle max-w-[200px]">
-                        <p className="font-medium text-vault-text truncate">
-                          {asset.name}
-                        </p>
-                        {asset.documentUrl && (
-                          <a
-                            href={asset.documentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-vault-link hover:text-vault-text focus-ring rounded"
-                          >
-                            View doc
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 align-middle">
-                        <Badge>{asset.type}</Badge>
-                      </td>
-                      <td className="px-4 py-3 align-middle text-right">
-                        <p className="font-mono tabular-nums text-vault-text whitespace-nowrap">
-                          {fmtCurrency(calculateTotal(asset))}
-                        </p>
-                        {asset.isRecurring && (
-                          <p className="text-xs text-vault-subtle whitespace-nowrap mt-0.5">
-                            +{fmtCurrency(asset.recurringAmount)} /{" "}
-                            {asset.recurringType}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 align-middle text-right font-mono tabular-nums text-vault-secondary">
-                        {asset.interestRate != null
-                          ? `${asset.interestRate}%`
-                          : "—"}
-                      </td>
-                      <td className="px-4 py-3 align-middle text-vault-secondary whitespace-nowrap">
-                        {fmtDate(asset.startDate) || "—"}
-                      </td>
-                      <td className="px-4 py-3 align-middle text-vault-secondary whitespace-nowrap">
-                        {fmtDate(asset.maturityDate) || "—"}
-                      </td>
-                      <td className="px-4 py-3 align-middle text-vault-secondary whitespace-nowrap">
-                        {fmtDate(asset.updatedAt) || "—"}
-                      </td>
-                      <td className="px-4 py-3 align-middle text-vault-secondary max-w-[10rem]">
-                        <span className="block truncate">
-                          {asset.notes || "—"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 align-middle">
-                        <AssetRowActions
-                          asset={asset}
-                          onEdit={setModal}
-                          onHistory={setHistoryId}
-                          onDelete={setDeleteId}
-                        />
-                      </td>
-                    </tr>
+                      {label}
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {assets.map((asset, rowIndex) => (
+                  <tr
+                    key={asset.id}
+                    className={cn(
+                      "hover:bg-vault-muted/20 transition-colors",
+                      rowIndex > 0 && "border-t border-vault-border"
+                    )}
+                  >
+                    <td className="px-3 xl:px-4 py-3 align-middle min-w-0">
+                      <p
+                        className="font-medium text-vault-text truncate"
+                        title={asset.name}
+                      >
+                        {asset.name}
+                      </p>
+                      {asset.documentUrl && (
+                        <a
+                          href={asset.documentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-vault-link hover:text-vault-text focus-ring rounded"
+                        >
+                          View doc
+                        </a>
+                      )}
+                    </td>
+                    <td className="px-3 xl:px-4 py-3 align-middle min-w-0">
+                      <Badge className="max-w-full truncate">{asset.type}</Badge>
+                    </td>
+                    <td className="px-3 xl:px-4 py-3 align-middle text-right">
+                      <p className="font-mono tabular-nums text-vault-text whitespace-nowrap">
+                        {fmtCurrency(calculateTotal(asset))}
+                      </p>
+                      {asset.isRecurring && (
+                        <p className="text-xs text-vault-subtle truncate mt-0.5">
+                          +{fmtCurrency(asset.recurringAmount)} /{" "}
+                          {asset.recurringType}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-3 xl:px-4 py-3 align-middle text-right font-mono tabular-nums text-vault-secondary whitespace-nowrap">
+                      {asset.interestRate != null
+                        ? `${asset.interestRate}%`
+                        : "—"}
+                    </td>
+                    <td className="px-3 xl:px-4 py-3 align-middle text-vault-secondary text-xs xl:text-sm whitespace-nowrap">
+                      {fmtDate(asset.startDate) || "—"}
+                    </td>
+                    <td className="px-3 xl:px-4 py-3 align-middle text-vault-secondary text-xs xl:text-sm whitespace-nowrap">
+                      {fmtDate(asset.maturityDate) || "—"}
+                    </td>
+                    <td className="px-3 xl:px-4 py-3 align-middle text-vault-secondary text-xs xl:text-sm whitespace-nowrap">
+                      {fmtDate(asset.updatedAt) || "—"}
+                    </td>
+                    <td className="px-3 xl:px-4 py-3 align-middle text-vault-secondary min-w-0">
+                      {asset.notes ? (
+                        <span
+                          className="block truncate"
+                          title={asset.notes}
+                        >
+                          {asset.notes}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-2 xl:px-3 py-3 align-middle">
+                      <AssetRowActions
+                        asset={asset}
+                        onEdit={setModal}
+                        onHistory={setHistoryId}
+                        onDelete={setDeleteId}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </Card>
         </>
       )}
