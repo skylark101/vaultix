@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 
 const nav = [
   { to: '/app/dashboard', label: 'Dashboard', icon: GridIcon },
@@ -61,7 +61,7 @@ export default function Sidebar({ onClose }) {
         {/* Close button — mobile only */}
         <button
           onClick={onClose}
-          className="lg:hidden p-1.5 rounded-md text-vault-subtle hover:text-vault-text hover:bg-vault-muted transition-all"
+          className="lg:hidden p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-vault-subtle hover:text-vault-text hover:bg-vault-muted transition-all focus-ring"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -71,23 +71,26 @@ export default function Sidebar({ onClose }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {nav.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={handleNavClick}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
-                isActive
-                  ? 'bg-vault-accent/15 text-vault-accent font-medium'
-                  : 'text-vault-subtle hover:text-vault-text hover:bg-vault-muted/50'
-              }`
-            }
-          >
-            <Icon />
-            {label}
-          </NavLink>
-        ))}
+        {nav.map((item) => {
+          const NavIcon = item.icon
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={handleNavClick}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 focus-ring ${
+                  isActive
+                    ? 'bg-vault-accent/15 text-vault-accent font-medium'
+                    : 'text-vault-subtle hover:text-vault-text hover:bg-vault-muted/50'
+                }`
+              }
+            >
+              <NavIcon />
+              {item.label}
+            </NavLink>
+          )
+        })}
       </nav>
 
       {/* User */}
@@ -100,7 +103,7 @@ export default function Sidebar({ onClose }) {
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-vault-subtle hover:text-red-400 hover:bg-red-400/10 transition-all duration-150"
+          className="w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm text-vault-subtle hover:text-vault-danger hover:bg-vault-danger/10 transition-all duration-150 focus-ring"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>

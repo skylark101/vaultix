@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import api from "../api/client";
+import { AuthFooterLink, AuthShell } from "../components/auth/AuthShell";
+import { Alert, Button, Input, Label, PasswordInput } from "../components/ui";
 
 export default function Login() {
   const { login } = useAuth();
@@ -12,6 +14,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError("");
     setLoading(true);
     try {
@@ -26,91 +29,64 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-vault-bg flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm fade-in">
-        {/* Logo */}
-        <Link to="/" className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-vault-accent flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
-            </svg>
-          </div>
-          <span className="text-vault-text font-semibold text-xl">Vaultix</span>
-        </Link>
-
-        <div className="bg-vault-surface border border-vault-border rounded-xl p-6 sm:p-7">
-          <h1 className="text-vault-text font-semibold text-lg mb-1">
-            Welcome back
-          </h1>
-          <p className="text-vault-subtle text-sm mb-6">
-            Sign in to your account
-          </p>
-
-          {error && (
-            <p className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg mb-4">
-              {error}
-            </p>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={form.email}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, email: e.target.value }))
-                }
-                placeholder="you@example.com"
-                className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-vault-subtle mb-1.5 font-medium uppercase tracking-wider">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={form.password}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, password: e.target.value }))
-                }
-                placeholder="••••••••"
-                className="w-full bg-vault-muted border border-vault-border rounded-lg px-3 py-2.5 text-sm text-vault-text placeholder-vault-subtle focus:border-vault-accent/60 transition-colors"
-              />
-            </div>
-            <div className="flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-xs text-vault-subtle hover:text-vault-accent transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-vault-accent hover:bg-vault-accent-dim text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-          </form>
-        </div>
-
-        <p className="text-center text-vault-subtle text-sm mt-4">
-          Don't have an account?{" "}
+    <AuthShell
+      footer={
+        <AuthFooterLink>
+          Don&apos;t have an account?{" "}
           <Link
             to="/signup"
-            className="text-vault-accent hover:text-vault-text transition-colors"
+            className="text-vault-link hover:text-vault-text transition-colors focus-ring rounded"
           >
             Sign up
           </Link>
-        </p>
-      </div>
-    </div>
+        </AuthFooterLink>
+      }
+    >
+      <h1 className="text-vault-text font-semibold text-lg mb-1">
+        Welcome back
+      </h1>
+      <p className="text-vault-subtle text-sm mb-6">Sign in to your account</p>
+
+      {error && (
+        <Alert variant="error" className="mb-4">
+          <p>{error}</p>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="login-email">Email</Label>
+          <Input
+            id="login-email"
+            type="email"
+            required
+            autoComplete="email"
+            value={form.email}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            placeholder="you@example.com"
+          />
+        </div>
+        <PasswordInput
+          id="login-password"
+          label="Password"
+          required
+          autoComplete="current-password"
+          value={form.password}
+          onChange={(v) => setForm((f) => ({ ...f, password: v }))}
+          placeholder="Your password"
+        />
+        <div className="flex justify-end">
+          <Link
+            to="/forgot-password"
+            className="text-xs text-vault-subtle hover:text-vault-link transition-colors focus-ring rounded px-1"
+          >
+            Forgot password?
+          </Link>
+        </div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Signing in…" : "Sign in"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

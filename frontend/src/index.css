@@ -25,6 +25,12 @@ input, textarea, select {
   outline: none;
 }
 
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vault-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-vault-bg;
+  }
+}
+
 .fade-in {
   animation: fadeIn 0.2s ease;
 }

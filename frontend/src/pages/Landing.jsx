@@ -1,319 +1,317 @@
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useEffect, useRef } from 'react'
+import { useAuth } from '../context/useAuth'
+import { fmtCurrency } from '../lib/format'
+import { Badge, Button, Card, CardContent, CardHeader } from '../components/ui'
+
+/** Static illustration only — not live or performance data. */
+const PREVIEW = {
+  totalInvested: 1_240_000,
+  assetCount: 4,
+  topCategory: 'Fixed Deposit',
+  topAmount: 500_000,
+  allocation: [
+    { type: 'Fixed Deposit', amount: 500_000, pct: 40.3 },
+    { type: 'Mutual Fund', amount: 420_000, pct: 33.9 },
+    { type: 'Gold', amount: 210_000, pct: 16.9 },
+    { type: 'Cash', amount: 110_000, pct: 8.9 },
+  ],
+  recent: [
+    { name: 'SBI Fixed Deposit', type: 'FD', amount: 500_000 },
+    { name: 'Index Fund SIP', type: 'Mutual Fund', amount: 120_000 },
+    { name: 'Digital Gold', type: 'Gold', amount: 210_000 },
+  ],
+}
+
+const ALLOCATION_BAR = [
+  'bg-vault-cat-1',
+  'bg-vault-cat-2',
+  'bg-vault-cat-3',
+  'bg-vault-cat-4',
+]
 
 const features = [
   {
+    title: 'Total invested',
+    desc: 'One clear number on your dashboard — the sum across your assets, including recurring contributions you configure.',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <line x1="12" y1="1" x2="12" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
       </svg>
     ),
-    title: 'Bank-grade encryption',
-    desc: 'All your assets are encrypted at rest and in transit.',
   },
   {
+    title: 'Allocation by type',
+    desc: 'See how your money is distributed across FDs, funds, gold, and any custom types you define.',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <path d="M18 20V10" />
+        <path d="M12 20V4" />
+        <path d="M6 20v-6" />
       </svg>
     ),
-    title: 'All asset types',
-    desc: 'Stocks, FDs, gold, real estate — track it all in one place.',
   },
   {
+    title: 'Asset registry',
+    desc: 'Search and filter your list, edit details, attach document links, and review change history.',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <polygon points="12 2 2 7 12 12 22 7 12 2" />
+        <polyline points="2 17 12 22 22 17" />
+        <polyline points="2 12 12 17 22 12" />
       </svg>
     ),
-    title: 'Maturity tracking',
-    desc: 'Never miss an FD maturity or investment deadline again.',
+  },
+  {
+    title: 'Built for your portfolio',
+    desc: 'Track maturity dates, interest rates, notes, and optional recurring investments — without brokerage clutter.',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
   },
 ]
 
-const mockAssets = [
-  { icon: '📈', name: 'Nifty 50 Index',    type: 'Mutual Fund',            value: '₹8,40,000', change: '+18.2%',  up: true,  color: '#6366f1' },
-  { icon: '🏦', name: 'SBI Fixed Deposit', type: 'FD · Matures Jan 2026', value: '₹5,00,000', change: '7.1% p.a.', up: true, color: '#34d399' },
-  { icon: '🪙', name: 'Digital Gold',      type: 'Commodity',              value: '₹2,15,000', change: '+4.6%',   up: true,  color: '#fbbf24' },
-  { icon: '🏠', name: 'REITs',             type: 'Real Estate',            value: '₹9,26,500', change: '-1.2%',   up: false, color: '#f87171' },
-]
-
-export default function Landing() {
-  const { user } = useAuth()
-  const glowRef = useRef(null)
-
-  useEffect(() => {
-    const el = glowRef.current
-    if (!el || window.innerWidth < 768) return
-    const onMove = (e) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 30
-      const y = (e.clientY / window.innerHeight - 0.5) * 30
-      el.style.transform = `translate(calc(-50% + ${x}px), ${y}px)`
-    }
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [])
-
+function LogoMark({ className = 'w-7 h-7' }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', color: '#e2e2f0', fontFamily: 'DM Sans, sans-serif' }}>
-
-      {/* noise overlay */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.03,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-      }} />
-
-      {/* ── NAV ── */}
-      <nav style={{ position: 'relative', zIndex: 10, borderBottom: '1px solid rgba(30,30,46,0.6)' }}>
-        <div className="l-nav">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 8, background: '#6366f1', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-              </svg>
-            </div>
-            <span style={{ fontWeight: 600, fontSize: 17, color: '#e2e2f0', letterSpacing: '-0.3px' }}>Vaultix</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {user ? (
-              <Link to="/app/dashboard" style={s.btnPrimary}>Dashboard →</Link>
-            ) : (
-              <>
-                <Link to="/login" style={s.btnGhost}>Sign in</Link>
-                <Link to="/signup" style={s.btnPrimary}>Get started</Link>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      {/* ── HERO ── */}
-      <section style={{ position: 'relative', zIndex: 1, overflow: 'hidden' }}>
-        <div ref={glowRef} style={{
-          position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
-          width: 600, height: 600, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse, rgba(99,102,241,0.18) 0%, transparent 70%)',
-          transition: 'transform 0.15s ease-out',
-        }} />
-        <div className="l-hero">
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)',
-            borderRadius: 99, padding: '4px 12px', marginBottom: 22,
-            fontSize: 12, color: '#a5b4fc', fontWeight: 500,
-            animation: 'fadeUp 0.5s ease both',
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 6px #6366f1', flexShrink: 0 }} />
-            Personal finance, secured
-          </div>
-
-          <h1 className="l-h1">
-            Your vault for every<br />
-            <span style={{
-              background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>asset you own</span>
-          </h1>
-
-          <p className="l-sub">
-            Track investments, fixed deposits, gold, and more — with maturity alerts and a clean dashboard.
-          </p>
-
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', animation: 'fadeUp 0.5s 0.3s ease both', opacity: 0 }}>
-            <Link to="/signup" style={{ ...s.btnPrimary, padding: '11px 28px', fontSize: 14 }}>Start for free →</Link>
-            <Link to="/login"  style={{ ...s.btnOutline, padding: '11px 24px', fontSize: 14 }}>Sign in</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── MOCK DASHBOARD PREVIEW ── */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '0 16px 64px' }}>
-        <div className="l-section">
-          <div style={{
-            background: '#111118', border: '1px solid #1e1e2e', borderRadius: 16, padding: 16,
-            boxShadow: '0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.06)',
-            animation: 'fadeUp 0.6s 0.4s ease both', opacity: 0,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontSize: 12, color: '#6b6b8a', marginBottom: 4 }}>Total portfolio</div>
-                <div className="l-portfolio-val">₹24,81,500</div>
-              </div>
-              <div style={{
-                background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)',
-                borderRadius: 8, padding: '6px 10px', fontSize: 12, color: '#818cf8', fontWeight: 500, flexShrink: 0,
-              }}>+12.4% overall</div>
-            </div>
-
-            {mockAssets.map((a, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 12px', borderRadius: 10, marginBottom: 6,
-                background: '#0d0d14', border: '1px solid #1a1a28', gap: 8,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-                  <div style={{
-                    width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                    background: a.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13,
-                  }}>{a.icon}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: '#e2e2f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
-                    <div className="l-asset-type">{a.type}</div>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#e2e2f0' }}>{a.value}</div>
-                  <div style={{ fontSize: 11, color: a.up ? '#34d399' : '#f87171', marginTop: 1 }}>{a.change}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ── */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '0 16px 80px' }}>
-        <div className="l-section">
-          <div className="l-features">
-            {features.map((f, i) => (
-              <div key={i} className="l-feat-card"
-                style={{ animation: `fadeUp 0.5s ${0.5 + i * 0.1}s ease both`, opacity: 0 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.35)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = '#1e1e2e'}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 9,
-                  background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#818cf8', marginBottom: 14, flexShrink: 0,
-                }}>{f.icon}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#e2e2f0', marginBottom: 6 }}>{f.title}</div>
-                <div style={{ fontSize: 13, color: '#6b6b8a', lineHeight: 1.6 }}>{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '0 16px 80px' }}>
-        <div className="l-section">
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.06) 100%)',
-            border: '1px solid rgba(99,102,241,0.2)', borderRadius: 18,
-            padding: '40px 20px', textAlign: 'center',
-            animation: 'fadeUp 0.5s 0.7s ease both', opacity: 0,
-          }}>
-            <h2 style={{ fontSize: 'clamp(20px, 4vw, 26px)', fontWeight: 600, color: '#e2e2f0', letterSpacing: '-0.5px', margin: '0 0 10px' }}>
-              Ready to take control?
-            </h2>
-            <p style={{ color: '#6b6b8a', fontSize: 14, margin: '0 0 24px' }}>Free to use. No credit card required.</p>
-            <Link to="/signup" style={{ ...s.btnPrimary, padding: '11px 32px', fontSize: 14 }}>
-              Create your vault →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer style={{
-        position: 'relative', zIndex: 1, borderTop: '1px solid #1e1e2e',
-        padding: '20px 16px', textAlign: 'center', color: '#3a3a5a', fontSize: 12,
-      }}>
-        © {new Date().getFullYear()} Vaultix. Built with care.
-      </footer>
-
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .l-nav {
-          max-width: 1080px; margin: 0 auto;
-          padding: 14px 16px;
-          display: flex; align-items: center; justify-content: space-between;
-        }
-        .l-section { max-width: 860px; margin: 0 auto; }
-        .l-hero {
-          max-width: 700px; margin: 0 auto;
-          padding: 52px 16px 52px;
-          text-align: center; position: relative;
-        }
-        .l-h1 {
-          font-size: clamp(30px, 7vw, 58px);
-          font-weight: 600; line-height: 1.1; letter-spacing: -1.5px;
-          color: #e2e2f0; margin: 0 0 16px;
-          animation: fadeUp 0.5s 0.1s ease both; opacity: 0;
-        }
-        .l-sub {
-          font-size: clamp(13px, 2.5vw, 16px); color: #6b6b8a; line-height: 1.7;
-          max-width: 420px; margin: 0 auto 28px;
-          animation: fadeUp 0.5s 0.2s ease both; opacity: 0;
-        }
-        .l-portfolio-val {
-          font-size: clamp(20px, 4vw, 28px);
-          font-weight: 600; color: #e2e2f0; letter-spacing: -0.5px;
-        }
-        .l-asset-type {
-          font-size: 11px; color: #6b6b8a; margin-top: 1px;
-          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-          max-width: 160px;
-        }
-        .l-features {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 14px;
-        }
-        .l-feat-card {
-          background: #111118; border: 1px solid #1e1e2e;
-          border-radius: 14px; padding: 20px;
-          transition: border-color 0.2s;
-        }
-
-        /* ── tablet ── */
-        @media (max-width: 768px) {
-          .l-features { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-          .l-asset-type { max-width: 120px; }
-        }
-
-        /* ── mobile ── */
-        @media (max-width: 480px) {
-          .l-nav { padding: 12px 14px; }
-          .l-hero { padding: 40px 14px 40px; }
-          .l-features { grid-template-columns: 1fr; gap: 10px; }
-          .l-feat-card { padding: 16px; }
-          .l-asset-type { max-width: 100px; }
-        }
-      `}</style>
+    <div
+      className={`${className} rounded-md bg-vault-accent flex items-center justify-center shrink-0`}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="white" aria-hidden>
+        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+      </svg>
     </div>
   )
 }
 
-const s = {
-  btnPrimary: {
-    display: 'inline-flex', alignItems: 'center',
-    background: '#6366f1', color: '#fff',
-    padding: '8px 16px', borderRadius: 8,
-    fontSize: 13, fontWeight: 500, textDecoration: 'none',
-    fontFamily: 'DM Sans, sans-serif', whiteSpace: 'nowrap',
-  },
-  btnGhost: {
-    display: 'inline-flex', alignItems: 'center',
-    color: '#6b6b8a', background: 'transparent',
-    padding: '8px 10px', borderRadius: 8,
-    fontSize: 13, fontWeight: 500, textDecoration: 'none',
-    fontFamily: 'DM Sans, sans-serif',
-  },
-  btnOutline: {
-    display: 'inline-flex', alignItems: 'center',
-    color: '#818cf8', background: 'transparent',
-    border: '1px solid rgba(99,102,241,0.3)',
-    padding: '8px 16px', borderRadius: 8,
-    fontSize: 13, fontWeight: 500, textDecoration: 'none',
-    fontFamily: 'DM Sans, sans-serif',
-  },
+function DashboardPreview() {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2 border-b border-vault-border bg-vault-inset/30">
+        <p className="text-xs text-vault-subtle uppercase tracking-wider font-medium">
+          Example dashboard
+        </p>
+        <p className="text-xs text-vault-subtle mt-1">
+          Illustration only — your totals come from the assets you add.
+        </p>
+      </CardHeader>
+      <CardContent className="pt-4 space-y-4">
+        <div>
+          <p className="text-xs text-vault-subtle font-medium uppercase tracking-wider mb-2">
+            Total invested
+          </p>
+          <p className="text-display-sm font-mono tabular-nums text-vault-text">
+            {fmtCurrency(PREVIEW.totalInvested)}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-vault-border bg-vault-inset/20 p-3">
+            <p className="text-xs text-vault-subtle uppercase tracking-wider mb-1">
+              Asset count
+            </p>
+            <p className="text-lg font-semibold font-mono tabular-nums text-vault-text">
+              {PREVIEW.assetCount}
+            </p>
+          </div>
+          <div className="rounded-lg border border-vault-border bg-vault-inset/20 p-3 min-w-0">
+            <p className="text-xs text-vault-subtle uppercase tracking-wider mb-1">
+              Largest category
+            </p>
+            <p className="text-sm font-medium text-vault-text truncate">
+              {PREVIEW.topCategory}
+            </p>
+            <p className="text-xs font-mono tabular-nums text-vault-secondary mt-0.5">
+              {fmtCurrency(PREVIEW.topAmount)}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-vault-text mb-3">Allocation by type</p>
+          <div className="space-y-2.5">
+            {PREVIEW.allocation.map((row, i) => (
+              <div key={row.type}>
+                <div className="flex justify-between text-sm mb-1 gap-2">
+                  <span className="text-vault-text truncate">{row.type}</span>
+                  <span className="text-vault-secondary font-mono text-xs tabular-nums shrink-0">
+                    {fmtCurrency(row.amount)}{' '}
+                    <span className="text-vault-subtle">({row.pct}%)</span>
+                  </span>
+                </div>
+                <div className="h-1.5 bg-vault-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${ALLOCATION_BAR[i % ALLOCATION_BAR.length]}`}
+                    style={{ width: `${row.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-2 border-t border-vault-border">
+          <p className="text-sm font-medium text-vault-text mb-2">Recently added</p>
+          <ul className="divide-y divide-vault-border">
+            {PREVIEW.recent.map((a) => (
+              <li
+                key={a.name}
+                className="flex items-center justify-between py-2.5 gap-3 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-vault-text font-medium truncate">{a.name}</p>
+                  <Badge className="mt-1">{a.type}</Badge>
+                </div>
+                <span className="text-sm font-mono tabular-nums text-vault-text shrink-0">
+                  {fmtCurrency(a.amount)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function Landing() {
+  const { user } = useAuth()
+
+  return (
+    <div className="min-h-screen bg-vault-bg text-vault-text flex flex-col">
+      <header className="border-b border-vault-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-2.5 focus-ring rounded-lg">
+            <LogoMark />
+            <span className="font-semibold tracking-wide">Vaultix</span>
+          </Link>
+          <nav className="flex items-center gap-2">
+            {user ? (
+              <Button to="/app/dashboard" size="sm">
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button to="/login" variant="ghost" size="sm">
+                  Sign in
+                </Button>
+                <Button to="/signup" size="sm">
+                  Get started
+                </Button>
+              </>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-14">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start">
+            <div className="text-center lg:text-left">
+              <p className="text-xs font-medium text-vault-secondary uppercase tracking-wider mb-4">
+                Personal asset tracker
+              </p>
+              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold leading-tight tracking-tight text-vault-text">
+                Know what you own.
+                <span className="block text-vault-secondary mt-1 sm:mt-2">
+                  One quiet place for your assets.
+                </span>
+              </h1>
+              <p className="mt-5 text-sm sm:text-base text-vault-subtle leading-relaxed max-w-md mx-auto lg:mx-0">
+                Vaultix helps you record investments, fixed deposits, gold, and
+                other holdings — with a clear total, simple allocation view, and
+                a searchable registry. No market noise, no fake performance stats.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                {user ? (
+                  <Button to="/app/dashboard" size="lg">
+                    Open dashboard
+                  </Button>
+                ) : (
+                  <>
+                    <Button to="/signup" size="lg">
+                      Create free account
+                    </Button>
+                    <Button to="/login" variant="secondary" size="lg">
+                      Sign in
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="w-full max-w-lg mx-auto lg:max-w-none lg:ml-auto">
+              <DashboardPreview />
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-vault-border bg-vault-surface/40">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+            <h2 className="text-lg sm:text-xl font-semibold text-vault-text mb-2 text-center">
+              What you can do in Vaultix
+            </h2>
+            <p className="text-sm text-vault-subtle text-center max-w-lg mx-auto mb-10">
+              The same views you get after signing in — designed for clarity, not
+              trading.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {features.map((f) => (
+                <Card key={f.title} className="p-5">
+                  <div className="w-9 h-9 rounded-lg border border-vault-border bg-vault-inset/50 flex items-center justify-center text-vault-link mb-4">
+                    {f.icon}
+                  </div>
+                  <h3 className="text-sm font-medium text-vault-text mb-2">{f.title}</h3>
+                  <p className="text-xs text-vault-subtle leading-relaxed">{f.desc}</p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <Card className="p-8 sm:p-10 text-center max-w-xl mx-auto">
+            <h2 className="text-xl font-semibold text-vault-text">
+              Start with your first asset
+            </h2>
+            <p className="text-sm text-vault-subtle mt-2 mb-6">
+              Free to use. Your data stays in your account.
+            </p>
+            {user ? (
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button to="/app/assets" size="md">
+                  Go to assets
+                </Button>
+                <Button to="/app/dashboard" variant="secondary" size="md">
+                  Dashboard
+                </Button>
+              </div>
+            ) : (
+              <Button to="/signup" size="md">
+                Create your account
+              </Button>
+            )}
+          </Card>
+        </section>
+      </main>
+
+      <footer className="border-t border-vault-border py-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-vault-subtle">
+          <span>© {new Date().getFullYear()} Vaultix</span>
+          <div className="flex items-center gap-4">
+            <Link to="/login" className="hover:text-vault-text transition-colors focus-ring rounded px-1">
+              Sign in
+            </Link>
+            <Link to="/signup" className="hover:text-vault-text transition-colors focus-ring rounded px-1">
+              Sign up
+            </Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
 }
