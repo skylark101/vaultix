@@ -153,26 +153,6 @@ function DashboardPreview() {
             ))}
           </div>
         </div>
-
-        <div className="pt-2 border-t border-vault-border">
-          <p className="text-sm font-medium text-vault-text mb-2">Recently added</p>
-          <ul className="divide-y divide-vault-border">
-            {PREVIEW.recent.map((a) => (
-              <li
-                key={a.name}
-                className="flex items-center justify-between py-2.5 gap-3 first:pt-0 last:pb-0"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm text-vault-text font-medium truncate">{a.name}</p>
-                  <Badge className="mt-1">{a.type}</Badge>
-                </div>
-                <span className="text-sm font-mono tabular-nums text-vault-text shrink-0">
-                  {fmtCurrency(a.amount)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </CardContent>
     </Card>
   )

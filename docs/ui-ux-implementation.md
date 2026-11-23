@@ -261,3 +261,47 @@
 ## Phase 2 status
 
 **All stages (1–5) and final polish: complete.**
+
+---
+
+## Dashboard intelligence upgrade
+
+### Objective
+
+Dashboard answers: how much invested, allocation, investment age, and recorded interest rates — **single API** (`GET /assets/dashboard`, including `assets[]`).
+
+### Sections (current)
+
+1. **Hero** — Total invested + tiles (assets, categories, top category %, monthly recurring or recurring count).
+2. **Allocation** — SVG donut; legend links to `?type=`.
+3. **Portfolio insights** — Largest category, highest-value asset, top 3 holdings share %, recurring count.
+4. **Investment tenure** — Average holding period, oldest asset + start date, horizontal bucket distribution (&lt;1y, 1–3y, &gt;3y) by asset count.
+5. **Interest rate overview** — Counts with/without rate, highest recorded rate (linked), breakdown by asset type (no portfolio-wide average).
+
+### Removed (refinement)
+
+- Allocation detail bars (duplicate of donut).
+- Upcoming maturities panel (maturity fields remain on Assets).
+- Recurring per-asset list (covered by hero + insights).
+
+### Files
+
+| File | Role |
+|------|------|
+| `frontend/src/pages/Dashboard.jsx` | Layout |
+| `frontend/src/components/dashboard/AllocationDonut.jsx` | Donut chart |
+| `frontend/src/lib/dashboardMetrics.js` | Insights, tenure, rates |
+| `frontend/src/lib/calculateTotal.js` | Shared totals |
+| `frontend/src/pages/Assets.jsx` | `?type=` / `?assetId=` deep links |
+
+### Constraints
+
+- No backend/schema changes; no fabricated returns.
+- Interest rates shown as user-entered annual % — not returns; no cross-type average.
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | ✅ Pass |
+| `npm run lint` | ✅ Pass |
